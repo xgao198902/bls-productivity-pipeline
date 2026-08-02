@@ -1,0 +1,40 @@
+bundle:
+  name: bls-productivity-pipeline
+
+variables:
+  catalog_name:
+    description: Unity Catalog catalog used for all bronze/silver/gold objects.
+    default: bls_productivity
+  bronze_volume_name:
+    description: Volume (inside <catalog_name>.bronze) that raw files land in.
+    default: raw_landing
+  contact_email:
+    description: >-
+      Email sent in the User-Agent header when pulling from BLS, per BLS's access
+      policy (https://www.bls.gov/bls/pss.htm). Required - the ingestion job's
+      02_ingest_bls_pr task fails fast if this is left blank. Set it via
+      `databricks bundle deploy --var contact_email=you@example.com`, or add a
+      target-level override below.
+    default: ""
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+    presets:
+      source_linked_deployment: false
+    workspace:
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+
+  prod:
+    mode: production
+    workspace:
+      host: https://dbc-b748ba32-7f06.cloud.databricks.com
+      root_path: /Workspace/Production/.bundle/${bundle.name}
+    presets:
+      source_linked_deployment: false
+    run_as:
+      user_name: xgao198902@gmail.com

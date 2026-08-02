@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Databricks Asset Bundle local state and variable overrides (may contain
+# personal contact info / environment-specific values - never commit these).
+.databricks/
+
