@@ -1,0 +1,59 @@
+resources:
+  jobs:
+    bls_ingestion_job:
+      name: bls_ingestion_job
+
+      # Exposed as Job parameters so the same job definition works across targets
+      # without editing YAML - override with `databricks bundle run bls_ingestion_job
+      # --params contact_email=you@example.com` if you don't want to redeploy.
+      parameters:
+        - name: catalog_name
+          default: ${var.catalog_name}
+        - name: bronze_volume_name
+          default: ${var.bronze_volume_name}
+        - name: contact_email
+          default: ${var.contact_email}
+
+      tasks:
+        - task_key: setup_catalog_schemas_volume
+          notebook_task:
+            notebook_path: ../setup/01_create_catalog_schemas_volume.py
+            base_parameters:
+              catalog_name: "{{job.parameters.catalog_name}}"
+              bronze_volume_name: "{{job.parameters.bronze_volume_name}}"
+
+        - task_key: ingest_bls_pr
+          depends_on:
+            - task_key: setup_catalog_schemas_volume
+          notebook_task:
+            notebook_path: ../ingestion/02_ingest_bls_pr.py
+            base_parameters:
+              catalog_name: "{{job.parameters.catalog_name}}"
+              bronze_volume_name: "{{job.parameters.bronze_volume_name}}"
+              contact_email: "{{job.parameters.contact_email}}"
+
+        - task_key: ingest_population
+          depends_on:
+            - task_key: setup_catalog_schemas_volume
+          notebook_task:
+            notebook_path: ../ingestion/03_ingest_population.py
+            base_parameters:
+              catalog_name: "{{job.parameters.catalog_name}}"
+              bronze_volume_name: "{{job.parameters.bronze_volume_name}}"
+              contact_email: "{{job.parameters.contact_email}}"
+
+        # Refreshes the Bronze/Silver/Gold Lakeflow pipeline once both raw sources
+        # have landed. Depending on both ingestion tasks (rather than just one)
+        # means a failure in either source blocks the refresh, so Gold never
+        # builds on a half-updated Bronze layer.
+        - task_key: refresh_bls_pipeline
+          depends_on:
+            - task_key: ingest_bls_pr
+            - task_key: ingest_population
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.bls_pipeline.id}
+
+      # No trigger is defined on purpose - Databricks Free Edition has a daily
+      # fair-usage quota, so this job is run on demand (`databricks bundle run
+      # bls_ingestion_job`) rather than silently consuming quota on a schedule.
+      # Add a `trigger.periodic` block here once you're ready to automate it.

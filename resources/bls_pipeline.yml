@@ -1,0 +1,43 @@
+resources:
+  pipelines:
+    bls_pipeline:
+      name: bls_medallion_pipeline
+      catalog: ${var.catalog_name}
+      schema: bronze
+      serverless: true
+
+      # Pipeline configuration is how transformation source files avoid
+      # hardcoding the catalog/volume - read in Python via spark.conf.get(...)
+      # and in SQL via ${...} substitution.
+      configuration:
+        catalog_name: ${var.catalog_name}
+        bronze_volume_path: "/Volumes/${var.catalog_name}/bronze/${var.bronze_volume_name}"
+
+      # Every table name in the transformation source files is fully qualified
+      # (catalog.schema.table), so this single pipeline publishes across the
+      # bronze/silver/gold schemas rather than needing one pipeline per schema.
+      #
+      # Note: the pipelines API requires glob includes to end in `/**` (a
+      # single-asterisk pattern like `*.py` is rejected with
+      # INVALID_PARAMETER_VALUE). All three directories are safe to include
+      # wholesale with `**`: the reference-only PySpark alternates for the
+      # Gold questions live in transformations/gold_alternates/ (a sibling of
+      # gold/, not nested inside it - see its README.md) specifically so they
+      # never get swept into this pipeline's `gold/**` glob and picked up as
+      # datasets.
+      #
+      # A `libraries.file` + `${workspace.file_path}` approach (listing each
+      # gold .sql file individually, absolute-path-style) was tried instead of
+      # this glob, to route around the alternates-folder problem without
+      # restructuring anything - but it repeatedly hit "Either glob or
+      # notebook/file field ... should be set" (400 INVALID_PARAMETER_VALUE)
+      # even once files were confirmed to be uploading correctly, so it's not
+      # used here. Moving gold_alternates/ out of gold/ and using a plain glob
+      # for all three layers is simpler and avoids that unresolved issue.
+      libraries:
+        - glob:
+            include: ../transformations/bronze/**
+        - glob:
+            include: ../transformations/silver/**
+        - glob:
+            include: ../transformations/gold/**
