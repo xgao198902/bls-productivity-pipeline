@@ -36,5 +36,3 @@ targets:
       root_path: /Workspace/Production/.bundle/${bundle.name}
     presets:
       source_linked_deployment: false
-    run_as:
-      user_name: xgao198902@gmail.com

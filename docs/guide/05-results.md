@@ -25,6 +25,11 @@ WHERE nation = 'United States' AND year BETWEEN 2013 AND 2018;
 Standard deviation uses the sample formula (`STDDEV`, Spark's default,
 divide by N-1) — a convention choice, not derivable from the source data.
 
+**Result:** mean population ≈ 322.1 million, standard deviation ≈ 4.2
+million (population grew from 316.1M in 2013 to 327.2M in 2018, a 3.49%
+increase) — also verified independently through the Genie Agent's own
+generated SQL, see [Step 6](06-genie.md).
+
 ![gold_population_stats result](images/gold-population-stats.png)
 <!-- SCREENSHOT: query result / table preview for gold_population_stats. -->
 

@@ -125,11 +125,9 @@ how to add a `trigger.periodic` block once you're ready to automate it.
   workspace-UI default of referencing your live working tree directly - this keeps dev's file
   resolution behavior identical to prod's, so a working dev deploy is representative of what
   prod will do.
-- **`prod`** - `mode: production` (stricter validation, no name prefix), a dedicated
+- **`prod`** - `mode: production` (stricter validation, no name prefix) and a dedicated
   `workspace.root_path` (`/Workspace/Production/.bundle/bls-productivity-pipeline`, not tied to
-  any one user's home folder or `/Shared`, which is writable by every workspace user), and a
-  fixed `run_as` identity so the deployment's ownership doesn't depend on whoever ran the last
-  `deploy`.
+  any one user's home folder or `/Shared`, which is writable by every workspace user).
 
 Deploy to prod the same way, just with `-t prod`, and provide `contact_email` via
 `.databricks/bundle/prod/variable-overrides.json` (Option B above, copied to the `prod` folder
