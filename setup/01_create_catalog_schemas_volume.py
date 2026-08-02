@@ -9,8 +9,10 @@
 # MAGIC - a Volume inside `bronze` that raw files land in before anything is parsed:
 # MAGIC   - `/bls/pr/...`      mirror of https://download.bls.gov/pub/time.series/pr/
 # MAGIC   - `/population/...`  raw JSON from the Data USA population API
-# MAGIC   - `/_manifest/...`   ingestion manifest (lets the ingestion job skip files it
-# MAGIC                        has already landed instead of reprocessing them)
+# MAGIC
+# MAGIC (The ingestion tasks track what they've already landed in a separate
+# MAGIC `bronze.raw_ingestion_manifest` Delta table, not a folder in the volume - see
+# MAGIC `ingestion/_manifest_common.py`.)
 # MAGIC
 # MAGIC Parameters (exposed as both notebook widgets and Databricks Job task parameters):
 # MAGIC - `catalog_name` (default `bls_productivity`) - point this at an existing catalog if
@@ -107,7 +109,7 @@ print(f"Volume '{catalog_name}.bronze.{bronze_volume_name}' ready.")
 
 volume_path = f"/Volumes/{catalog_name}/bronze/{bronze_volume_name}"
 
-for sub_dir in ("bls/pr", "population", "_manifest"):
+for sub_dir in ("bls/pr", "population"):
     dbutils.fs.mkdirs(f"{volume_path}/{sub_dir}")
     print(f"Directory '{volume_path}/{sub_dir}' ready.")
 
