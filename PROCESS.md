@@ -93,7 +93,7 @@ Both resources are parameterized by the same bundle `variables`
 (`catalog_name`, `bronze_volume_name`, `contact_email`), so `dev` and `prod`
 point at different catalogs/paths without duplicating any resource
 definitions — see [`README.md`](README.md#targets-dev--prod) for the
-target-level differences (`root_path`, `run_as`, naming).
+target-level differences (`root_path`, naming).
 
 ## Trade-offs
 
@@ -121,11 +121,15 @@ not a production system. Things I'd handle differently for a real client:
   classic/job clusters with autoscaling and auto-termination tuned against
   actual data volume rather than serverless-by-default.
 - **Access control.** Everything here lives in one catalog with default
-  grants and a personal `run_as` identity for `prod`. A real deployment
-  would use a dedicated service principal (not a person's account) for
-  `run_as`, Unity Catalog groups instead of individual grants, and — if any
-  of the source data were sensitive rather than public BLS/Census data —
-  row filters or column masks at the Silver/Gold boundary.
+  grants, and `prod` has no `run_as` configured, so ownership of a deploy
+  depends on whoever happens to run `databricks bundle deploy -t prod` (an
+  earlier version pinned a personal email there instead, which is worse —
+  hardcoding an individual's identity into version control). A real
+  deployment would set `run_as` to a dedicated service principal (not a
+  person's account either way), plus Unity Catalog groups instead of
+  individual grants, and — if any of the source data were sensitive rather
+  than public BLS/Census data — row filters or column masks at the
+  Silver/Gold boundary.
 - **Monitoring.** Right now, "did it work" means opening the pipeline's run
   page and reading it. A real client needs job-failure notifications
   (email/Slack/PagerDuty), dashboards on the Lakeflow expectation metrics
@@ -184,3 +188,39 @@ anywhere. Catching this required actually reading the source's documentation
 rather than inferring meaning from the code values alone — a good reminder
 that "the schema looks fine" and "the aggregation is correct" are
 independent claims.
+
+## AI Assistance Disclosure
+
+I used Cursor's agent (built on Claude) throughout this project as a
+reference/pair-programming tool, not as a black box — I can walk through the
+logic of every file in this repo. Concretely:
+
+- The AI drafted the initial scaffolding at each stage: the medallion
+  catalog/schema/volume setup, the manifest-driven incremental ingestion
+  pattern, the Bronze/Silver/Gold transformation files, the Databricks Asset
+  Bundle structure, and this documentation set.
+- I ran everything for real against an actual Databricks workspace at every
+  step, rather than trusting that drafted code would work, and fed the
+  *actual* results back in — real 403 errors from BLS, real
+  `INVALID_PARAMETER_VALUE` deployment failures, real
+  `DELTA_INVALID_CHARACTERS_IN_COLUMN_NAMES` errors, and the real
+  (surprising) symptom of Silver tables coming back empty with expectations
+  reporting 100% written. Each of those drove a specific, verifiable fix
+  (the `User-Agent` header, the `**` glob pattern, Delta column mapping, a
+  Full Refresh plus reordering the job's tasks) rather than a guessed one.
+- I independently verified the final output rather than taking generated
+  code on faith — spot-checking row counts on `gold_series_best_year` (237)
+  and `gold_prs30006032_by_year` (39) against what the pipeline's join logic
+  should produce, and cross-checking `gold_population_stats`'s mean/stddev
+  through the Genie Agent's own independently-generated SQL (see
+  [`docs/guide/05-results.md`](docs/guide/05-results.md) and
+  [`docs/guide/06-genie.md`](docs/guide/06-genie.md)).
+- Design decisions that required reading and interpreting the source data
+  directly — the `Q05`/"Annual Average" exclusion in particular — were
+  confirmed against BLS's own `pr.txt` documentation, not accepted on the
+  AI's say-so.
+
+I'm able to explain the reasoning behind every choice documented above
+(medallion layering, materialized views vs. streaming tables, the manifest
+table's schema, why expectations live where they do, the Q05 exclusion) in
+detail.

@@ -49,6 +49,18 @@ the raw schema:
     `SELECT * FROM gold_prs30006032_by_year ORDER BY year;`
 - **Column descriptions** — Unity Catalog column comments on the Gold tables
   (if added) get pulled in automatically as extra grounding context.
+- **Common questions** (Genie's "About" panel, distinct from example
+  queries — these are one-click suggestions shown to the stakeholder, no SQL
+  attached). The deployed agent here ("US Productivity and Population
+  Trends") is seeded with:
+  - "What tables are there and how are they connected? Give me a short
+    summary."
+  - "What is the yearly sum and average of the value column in
+    `gold_prs30006032_by_year`?"
+  - "What is the distribution of best years across all series in the
+    `gold_series_best_year` table?"
+  - "What are the min, max, average, and median of `mean_population` in the
+    `gold_population_stats` table?"
 
 ## Testing it
 
@@ -56,9 +68,22 @@ Ask it a few questions directly in the chat, including at least one it
 wasn't explicitly seeded with, to confirm it generalizes rather than just
 pattern-matching the example queries verbatim.
 
-![Genie Agent answering a question](images/genie-chat.png)
-<!-- SCREENSHOT: the Genie chat UI with a question typed in and a correct
-     answer (table or chart) returned. -->
+**This is the actual bonus deliverable in action** — a stakeholder with no
+SQL knowledge typing a free-form question and getting a real, correct answer
+straight from the Gold layer:
+
+> *"how me Assess annual US population trends and calculate mean and
+> standard deviation between 2013-2018."*
+
+Genie wrote and ran its own SQL against `gold_population_stats`, then
+returned a chart of the 2013-2018 trend, a one-line summary ("The US
+population grew steadily from 316.1 million in 2013 to 327.2 million in
+2018, representing a total increase of 11.0 million people (3.49% growth)"),
+and the statistical summary itself: **mean population 322.1 million,
+standard deviation 4.2 million** — the exact answer to Gold question 1,
+produced without anyone writing a line of SQL.
+
+![Genie Agent answering the population trend/stats question](images/genie-chat.png)
 
 ## Sharing it
 

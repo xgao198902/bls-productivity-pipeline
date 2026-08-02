@@ -276,6 +276,9 @@ See `transformations/gold/*.sql` for the exact, fully-qualified versions, and
   anyway), so a working `dev` deploy is representative of `prod`. `prod` also
   pins a dedicated `workspace.root_path`
   (`/Workspace/Production/.bundle/bls-productivity-pipeline` - not a per-user
-  home folder, and not `/Shared`, which every workspace user can write to) and
-  a fixed `run_as` identity, so the deployment's ownership doesn't depend on
-  whoever happened to run `deploy` last.
+  home folder, and not `/Shared`, which every workspace user can write to).
+  An earlier version also pinned a fixed `run_as` identity so the
+  deployment's ownership wouldn't depend on whoever happened to run `deploy`
+  last; that was removed since it hardcoded a personal email into version
+  control - a real deployment would use a dedicated service principal for
+  this instead (see `PROCESS.md`'s "Access control" trade-off).

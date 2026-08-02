@@ -66,8 +66,8 @@ the job and the pipeline defined in `resources/ingestion_job.yml` and
 - **`dev`** (default) — `mode: development`, deploys a real synced copy of
   the files (not a live-working-tree reference) so its behavior matches
   what `prod` does.
-- **`prod`** — `mode: production`, a dedicated non-user-scoped
-  `workspace.root_path`, and a fixed `run_as` identity.
+- **`prod`** — `mode: production` and a dedicated non-user-scoped
+  `workspace.root_path`.
 
 To deploy to `prod`, copy `variable-overrides.example.json` to
 `.databricks/bundle/prod/variable-overrides.json` instead of `dev`, then:
